@@ -26,6 +26,8 @@ function Stave(id) {
 		self.options.staveStart = 50;
 		self.options.staveStep = 20;
 		self.options.staveLineWidth = 2;
+		self.options.staveLinesNum = 5;
+		self.options.startOctave = 1;
 		self.options.scale = {
 			"notes": ["c", "d", "e", "f", "g", "a", "h"],
 			"sounds": [["his", "c"], ["cis", "des"], ["d"], ["dis", "es"], ["e", "fes"], ["eis", "f"], ["fis", "ges"], ["g"], ["gis", "aes"], ["a"], ["ais", "b", "hes"], ["h", "ces"]],
@@ -44,7 +46,7 @@ function Stave(id) {
 	}
 
 	function drawStave() {
-		for(var i = 0, x = 0, y = self.options.staveStart; i < 3; i++) {
+		for(var i = 0, x = 0, y = self.options.staveStart; i < self.options.staveLinesNum; i++) {
 			self.context.strokeStyle = "#000000";
 			self.context.lineWidth = self.options.staveLineWidth;
 			self.context.beginPath();
@@ -59,8 +61,9 @@ function Stave(id) {
 	function drawChord(chord) {
 		for(var i = 0, note; i < chord.chord.notes.length; i++) {
 			note = {};
+			note.octave = chord.chord.octave[i];
 
-			for(var j = 0; j < self.options.scale.notes; j++) {
+			for(var j = 0; j < self.options.scale.notes.length; j++) {
 				if(chord.chord.notes[i] == self.options.scale.notes[j]) {
 					note.staveLine = self.options.scale.octave1StaveLines[j];
 				}
@@ -80,7 +83,8 @@ function Stave(id) {
 	}
 
 	function drawNote(note) {
-		var y = self.options.staveStart + self.options.staveLineWidth/2;
+		var additionalStaveLines = (note.octave - self.options.startOctave) * (self.options.scale.octave1StaveLines.length * 0.5);
+		var y = self.options.staveStart + ((self.options.staveLinesNum - 1) - (note.staveLine + additionalStaveLines)) * self.options.staveStep;
 
 		var topCurve = {};
 		topCurve.start = {x: 100, y: y};
