@@ -1,5 +1,8 @@
 $(function() {
 	window.stave = new Stave("Stave");
+	window.stave._showChord();
+	$("#text").html(window.stave.chord.tonic + "-" + window.stave.chord.mode + "<br>" + window.stave.chord.chord["notes"].join(" ") + "<br>" + window.stave.chord.chord["sounds"][0] + window.stave.chord.chord.octave[0] + " " + window.stave.chord.chord["sounds"][1] + window.stave.chord.chord.octave[1] + " " + window.stave.chord.chord["sounds"][2] + window.stave.chord.chord.octave[2]);
+
 });
 
 function Stave(id) {
@@ -13,23 +16,37 @@ function Stave(id) {
 		initOptions();
 		self.elem = document.getElementById(id);
 		self.context  = self.elem.getContext('2d')
-		self.chordArray = ["C", "F", "G"];
-		self.chord = new Chord(self.chordArray);
-		$("#text").html(self.chord.tonic + "-" + self.chord.mode + "<br>" + self.chord.chord["notes"].join(" ") + "<br>" + self.chord.chord["sounds"][0] + self.chord.chord.octave[0] + " " + self.chord.chord["sounds"][1] + self.chord.chord.octave[1] + " " + self.chord.chord["sounds"][2] + self.chord.chord.octave[2]);
+		self.chordArray = ["C", "F", "G", "D"];
 
 		drawStave();
-		drawChord(self.chord.chord);	
 	}
 
 	function initOptions() {
 		self.options = {};
-		self.options.staveStep = 10;
+		self.options.staveStart = 50;
+		self.options.staveStep = 20;
+		self.options.staveLineWidth = 2;
+		self.options.scale = {
+			"notes": ["c", "d", "e", "f", "g", "a", "h"],
+			"sounds": [["his", "c"], ["cis", "des"], ["d"], ["dis", "es"], ["e", "fes"], ["eis", "f"], ["fis", "ges"], ["g"], ["gis", "aes"], ["a"], ["ais", "b", "hes"], ["h", "ces"]],
+			"octave1StaveLines": [-1, -0.5, 0, 0.5, 1, 1.5, 2]
+		};
+		self.options.octaveLimit = {
+			"sounds": ["a", "a"],
+			"octave": [0, 2]
+		};
+		self.options.note = {
+			width: 30,
+			height: 24,
+			lineWidth: 2,
+			strokeStyle: "#000"
+		};
 	}
 
 	function drawStave() {
-		for(var i = 0, x = 0, y = 1; i < 5; i++) {
+		for(var i = 0, x = 0, y = self.options.staveStart; i < 3; i++) {
 			self.context.strokeStyle = "#000000";
-			self.context.lineWidth = 2;
+			self.context.lineWidth = self.options.staveLineWidth;
 			self.context.beginPath();
 			self.context.moveTo(x, y);
 			self.context.lineTo(200, y);
@@ -39,20 +56,20 @@ function Stave(id) {
 		}
 	}
 
-	function drawChord(chord) {console.log(chord);
-		for(var i = 0, note; i < chord.notes.length; i++) {
+	function drawChord(chord) {
+		for(var i = 0, note; i < chord.chord.notes.length; i++) {
 			note = {};
 
 			for(var j = 0; j < self.options.scale.notes; j++) {
-				if(chord.notes[i] == self.options.scale.notes[j]) {
+				if(chord.chord.notes[i] == self.options.scale.notes[j]) {
 					note.staveLine = self.options.scale.octave1StaveLines[j];
 				}
 			}
 
 			note.alteration = 0;
-			if(chord.sounds[i].indexOf("is") != -1) {
+			if(chord.chord.sounds[i].indexOf("is") != -1) {
 				note.alteration = +1;
-			} else {
+			} else if(chord.chord.sounds[i].indexOf("es") != -1) {
 				note.alteration = -1;
 			}
 			
@@ -63,10 +80,39 @@ function Stave(id) {
 	}
 
 	function drawNote(note) {
-		console.log(note);
+		var y = self.options.staveStart + self.options.staveLineWidth/2;
+
+		var topCurve = {};
+		topCurve.start = {x: 100, y: y};
+		topCurve.cPoint1 = {x: topCurve.start.x, y: topCurve.start.y - self.options.note.height/2};
+		topCurve.cPoint2 = {x: topCurve.start.x + self.options.note.width, y: topCurve.start.y - self.options.note.height/2};
+		topCurve.end = {x: topCurve.start.x + self.options.note.width, y: topCurve.start.y};
+
+		var bottomCurve = {};
+		bottomCurve.start = {x: topCurve.end.x, y: topCurve.end.y};
+		bottomCurve.cPoint1 = {x: bottomCurve.start.x, y: bottomCurve.start.y + self.options.note.height/2};
+		bottomCurve.cPoint2 = {x: bottomCurve.start.x - self.options.note.width, y: bottomCurve.start.y + self.options.note.height/2};
+		bottomCurve.end = {x: topCurve.start.x, y: topCurve.start.y};
+
+		self.context.strokeStyle = self.options.note.strokeStyle;
+		self.context.lineWidth = self.options.note.lineWidth;
+		self.context.beginPath();
+		self.context.moveTo(topCurve.start.x, topCurve.start.y);
+		self.context.bezierCurveTo(topCurve.cPoint1.x, topCurve.cPoint1.y, topCurve.cPoint2.x, topCurve.cPoint2.y, topCurve.end.x, topCurve.end.y);
+		self.context.bezierCurveTo(bottomCurve.cPoint1.x, bottomCurve.cPoint1.y, bottomCurve.cPoint2.x, bottomCurve.cPoint2.y, bottomCurve.end.x, bottomCurve.end.y);
+		self.context.fill();
+	}
+
+	function showChord() {
+		self.chord = new Chord(self.chordArray);
+		drawChord(self.chord);
 	}
 
 	/*-- public methods ---*/
+
+	this._showChord = function() {
+		showChord();
+	};
 	
 }
 
@@ -81,7 +127,6 @@ function Chord(chordArray) {
 		self.triad = getTriad();
 		self.chord = getChord();
 		self.chord = setOctave(self.chord);
-			console.log(self.chord);
 	}
 
 	function initOptions() {
@@ -97,15 +142,6 @@ function Chord(chordArray) {
 				"moll": [3, 4]
 			}
 		};
-		self.options.scale = {
-			"notes": ["c", "d", "e", "f", "g", "a", "h"],
-			"sounds": [["his", "c"], ["cis", "des"], ["d"], ["dis", "es"], ["e", "fes"], ["eis", "f"], ["fis", "ges"], ["g"], ["gis", "aes"], ["a"], ["ais", "b", "hes"], ["h", "ces"]],
-			"octave1StaveLines": [-1, -0.5, 0, 0.5, 1, 1.5, 2]
-		};
-		self.options.octaveLimit = {
-			"sounds": ["a", "a"],
-			"octave": [0, 2]
-		};
 	}
 
 	function chooseMode() {
@@ -118,7 +154,7 @@ function Chord(chordArray) {
 		self.tonic = chordArray[random];
 		var tonicIndex = getScaleNameIndex(chordArray[random]);
 		var triadAlgorithm = getTriadAlgorithm();
-		triadAlgorithm = adaptArray(triadAlgorithm, self.options.scale);
+		triadAlgorithm = adaptArray(triadAlgorithm, window.stave.options.scale);
 
 		return {
 			"notes": formTriad("notes"),
@@ -143,10 +179,10 @@ function Chord(chordArray) {
 		function formTriad(key) {
 			var result = [];
 			for(var i = 0; i < triadAlgorithm[key].length; i++) {
-				var arrayItem = self.options.scale[key][triadAlgorithm[key][i]];
+				var arrayItem = window.stave.options.scale[key][triadAlgorithm[key][i]];
 				if(arrayItem.push) {
 					for(var j = 0; j < arrayItem.length; j++) {
-						if(arrayItem[j].slice(0, 1) == self.options.scale.notes[triadAlgorithm.notes[i]]) {
+						if(arrayItem[j].slice(0, 1) == window.stave.options.scale.notes[triadAlgorithm.notes[i]]) {
 							result.push(arrayItem[j]);
 						}
 					}
@@ -175,8 +211,8 @@ function Chord(chordArray) {
 		return result;
 
 		function getIndex(key) {
-			for(var i = 0; i < self.options.scale[key].length; i++) {
-				var arrayItem = self.options.scale[key][i];
+			for(var i = 0; i < window.stave.options.scale[key].length; i++) {
+				var arrayItem = window.stave.options.scale[key][i];
 				if(arrayItem.push) {
 					for(var j= 0; j < arrayItem.length; j++) {
 						if(arrayItem[j] == scale[key]) {
@@ -217,13 +253,13 @@ function Chord(chordArray) {
 	}
 
 	function setOctave(chord) {
-		chord.octave = [self.options.octaveLimit.octave[0]];
+		chord.octave = [window.stave.options.octaveLimit.octave[0]];
 
 		var chordStartIndex = getScaleNameIndex(chord.sounds[0]).sounds;
 		//var chordEndIndex = getScaleNameIndex(chord.sounds[chord.sounds.length - 1]).sounds;
 
-		var limitStartIndex = getScaleNameIndex(self.options.octaveLimit.sounds[0]).sounds;
-		//var limitEndIndex = getScaleNameIndex(self.options.octaveLimit.sounds[1]).sounds;
+		var limitStartIndex = getScaleNameIndex(window.stave.options.octaveLimit.sounds[0]).sounds;
+		//var limitEndIndex = getScaleNameIndex(window.stave.options.octaveLimit.sounds[1]).sounds;
 
 		if(chordStartIndex < limitStartIndex) {
 			chord.octave[0] = chord.octave[0] + 1;
