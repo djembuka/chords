@@ -83,22 +83,24 @@ function Stave(id) {
 	}
 
 	function drawNote(note) {
+		console.log(note);
 		var additionalStaveLines = (note.octave - self.options.startOctave) * (self.options.scale.octave1StaveLines.length * 0.5);
 		var noteStaveLine = note.staveLine + additionalStaveLines;
+		var x = 100;
 		var y = self.options.staveStart + ((self.options.staveLinesNum - 1) - (note.staveLine + additionalStaveLines)) * self.options.staveStep;
 
 		var topCurve = getTopCurve();
 		var bottomCurve = getBottomCurve();
+
+		self.context.strokeStyle = self.options.note.strokeStyle;
 		
 		drawNoteBody();
 		drawNoteAdditionalLine();
-
-		self.context.strokeStyle = self.options.note.strokeStyle;
-		self.context.lineWidth = self.options.note.lineWidth;
+		drawAlteration(note.alteration);
 		
 		function getTopCurve() {
 			var result = {};
-			result.start = {x: 100, y: y};
+			result.start = {x: x, y: y};
 			result.cPoint1 = {x: result.start.x, y: result.start.y - self.options.note.height/2};
 			result.cPoint2 = {x: result.start.x + self.options.note.width, y: result.start.y - self.options.note.height/2};
 			result.end = {x: result.start.x + self.options.note.width, y: result.start.y};
@@ -117,6 +119,8 @@ function Stave(id) {
 		}
 		
 		function drawNoteBody() {
+			self.context.lineWidth = self.options.note.lineWidth;
+			
 			self.context.beginPath();
 			self.context.moveTo(topCurve.start.x, topCurve.start.y);
 			self.context.bezierCurveTo(topCurve.cPoint1.x, topCurve.cPoint1.y, topCurve.cPoint2.x, topCurve.cPoint2.y, topCurve.end.x, topCurve.end.y);
@@ -125,6 +129,8 @@ function Stave(id) {
 		}
 		
 		function drawNoteAdditionalLine() {
+			self.context.lineWidth = self.options.note.lineWidth;
+			
 			var line = Math.floor(Math.abs(noteStaveLine));
 			var sign = noteStaveLine / Math.abs(noteStaveLine);
 			
@@ -136,12 +142,68 @@ function Stave(id) {
 			}
 			
 			function drawLine(line) {
-				var x = 100;
 				var y = self.options.staveStart + self.options.staveStep * (self.options.staveLinesNum - 1 - sign * line);
 				
 				self.context.beginPath();
 				self.context.moveTo(x - 5, y);
 				self.context.lineTo(x + self.options.note.width + 5, y);
+				self.context.stroke();
+			}
+		}
+		
+		function drawAlteration(alteration) {
+			if(alteration == 0) return;
+			
+			switch(alteration) {
+				case 1:
+					drawSharp();
+					break;
+				case -1:
+					drawFlat();
+					break;
+			}
+			
+			function drawSharp() {
+				self.context.lineWidth = 1.5 * self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 5, y - 5);
+				self.context.lineTo(x - 20, y - 2);
+				self.context.stroke();
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 5, y + 2);
+				self.context.lineTo(x - 20, y + 5);
+				self.context.stroke();
+				
+				self.context.lineWidth = self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 10, y - 15);
+				self.context.lineTo(x - 10, y + 15);
+				self.context.stroke();
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 15, y - 15);
+				self.context.lineTo(x - 15, y + 15);
+				self.context.stroke();
+			}
+			
+			function drawFlat() {
+				var startX = x - 15;
+				
+				self.context.lineWidth = self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(startX, y + self.options.note.height/2 - self.context.lineWidth);
+				self.context.lineTo(startX, y - self.options.note.height - 7);
+				self.context.stroke();
+				
+				self.context.lineWidth = 1.5 * self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(startX, y + self.options.note.height/2 - self.context.lineWidth);
+				self.context.bezierCurveTo(startX + 15, y, startX + 15, y - self.options.note.height/2 - 5, startX, y - self.options.note.height/2 + 2 * self.context.lineWidth);
 				self.context.stroke();
 			}
 		}
