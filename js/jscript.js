@@ -84,27 +84,67 @@ function Stave(id) {
 
 	function drawNote(note) {
 		var additionalStaveLines = (note.octave - self.options.startOctave) * (self.options.scale.octave1StaveLines.length * 0.5);
+		var noteStaveLine = note.staveLine + additionalStaveLines;
 		var y = self.options.staveStart + ((self.options.staveLinesNum - 1) - (note.staveLine + additionalStaveLines)) * self.options.staveStep;
 
-		var topCurve = {};
-		topCurve.start = {x: 100, y: y};
-		topCurve.cPoint1 = {x: topCurve.start.x, y: topCurve.start.y - self.options.note.height/2};
-		topCurve.cPoint2 = {x: topCurve.start.x + self.options.note.width, y: topCurve.start.y - self.options.note.height/2};
-		topCurve.end = {x: topCurve.start.x + self.options.note.width, y: topCurve.start.y};
-
-		var bottomCurve = {};
-		bottomCurve.start = {x: topCurve.end.x, y: topCurve.end.y};
-		bottomCurve.cPoint1 = {x: bottomCurve.start.x, y: bottomCurve.start.y + self.options.note.height/2};
-		bottomCurve.cPoint2 = {x: bottomCurve.start.x - self.options.note.width, y: bottomCurve.start.y + self.options.note.height/2};
-		bottomCurve.end = {x: topCurve.start.x, y: topCurve.start.y};
+		var topCurve = getTopCurve();
+		var bottomCurve = getBottomCurve();
+		
+		drawNoteBody();
+		drawNoteAdditionalLine();
 
 		self.context.strokeStyle = self.options.note.strokeStyle;
 		self.context.lineWidth = self.options.note.lineWidth;
-		self.context.beginPath();
-		self.context.moveTo(topCurve.start.x, topCurve.start.y);
-		self.context.bezierCurveTo(topCurve.cPoint1.x, topCurve.cPoint1.y, topCurve.cPoint2.x, topCurve.cPoint2.y, topCurve.end.x, topCurve.end.y);
-		self.context.bezierCurveTo(bottomCurve.cPoint1.x, bottomCurve.cPoint1.y, bottomCurve.cPoint2.x, bottomCurve.cPoint2.y, bottomCurve.end.x, bottomCurve.end.y);
-		self.context.fill();
+		
+		function getTopCurve() {
+			var result = {};
+			result.start = {x: 100, y: y};
+			result.cPoint1 = {x: result.start.x, y: result.start.y - self.options.note.height/2};
+			result.cPoint2 = {x: result.start.x + self.options.note.width, y: result.start.y - self.options.note.height/2};
+			result.end = {x: result.start.x + self.options.note.width, y: result.start.y};
+			
+			return result;
+		}
+		
+		function getBottomCurve() {
+			var result = {};
+			result.start = {x: topCurve.end.x, y: topCurve.end.y};
+			result.cPoint1 = {x: result.start.x, y: result.start.y + self.options.note.height/2};
+			result.cPoint2 = {x: result.start.x - self.options.note.width, y: result.start.y + self.options.note.height/2};
+			result.end = {x: topCurve.start.x, y: topCurve.start.y};
+			
+			return result;
+		}
+		
+		function drawNoteBody() {
+			self.context.beginPath();
+			self.context.moveTo(topCurve.start.x, topCurve.start.y);
+			self.context.bezierCurveTo(topCurve.cPoint1.x, topCurve.cPoint1.y, topCurve.cPoint2.x, topCurve.cPoint2.y, topCurve.end.x, topCurve.end.y);
+			self.context.bezierCurveTo(bottomCurve.cPoint1.x, bottomCurve.cPoint1.y, bottomCurve.cPoint2.x, bottomCurve.cPoint2.y, bottomCurve.end.x, bottomCurve.end.y);
+			self.context.fill();
+		}
+		
+		function drawNoteAdditionalLine() {
+			var line = Math.floor(Math.abs(noteStaveLine));
+			var sign = noteStaveLine / Math.abs(noteStaveLine);
+			
+			if(0 <= sign * line && sign * line <= (self.options.staveLinesNum - 1)) return;
+			
+			while(sign * line < 0 || sign * line > (self.options.staveLinesNum - 1)) {
+				drawLine(line);
+				line--;
+			}
+			
+			function drawLine(line) {
+				var x = 100;
+				var y = self.options.staveStart + self.options.staveStep * (self.options.staveLinesNum - 1 - sign * line);
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 5, y);
+				self.context.lineTo(x + self.options.note.width + 5, y);
+				self.context.stroke();
+			}
+		}
 	}
 
 	function showChord() {
