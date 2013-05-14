@@ -52,18 +52,16 @@ function AnswerPanel(id) {
 		self.$elem.find("a").click(clickButton);
 
 		function clickButton() {
+			self.time.clickTime = new Date().getTime();
 			window.stave._clear();
 
-			self.testNum--;
-			if(self.testNum == 0) {
-				showResult();
-			} else {
+			if(self.time.showTime == 0) {//when load page
 				showNewChord();
+				return;
 			}
 
-			self.time.clickTime = new Date().getTime();
-
 			if(!window.stave || !window.stave.chord) return false;
+
 			var currentChord = window.stave.chord;
 			var $button = $(this);
 			var chord = {
@@ -78,6 +76,13 @@ function AnswerPanel(id) {
 			}
 
 			rememberInterval();
+
+			self.testNum--;
+			if(self.testNum == 0) {
+				showResult();
+			} else {
+				showNewChord();
+			}
 
 			return false;
 		}
@@ -138,7 +143,7 @@ function Stave(id) {
 		self.elem = document.getElementById(id);
 		initOptions();
 		self.context  = self.elem.getContext('2d')
-		self.chordArray = ["C", "F", "G", "D"];
+		self.chordArray = ["C", "F", "G", "D", "A", "E", "H"];
 
 		drawStave();
 	}
