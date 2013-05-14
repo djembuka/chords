@@ -1,0 +1,7 @@
+The service works like that:
+
+- it shows a chord;
+- you press the link below with name of the chord;
+- it shows another chord, you press...
+- ... till 10 iterations are done;
+- then it shows your statistics.
