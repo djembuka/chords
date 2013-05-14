@@ -1,9 +1,131 @@
 $(function() {
 	window.stave = new Stave("Stave");
-	window.stave._showChord();
-	$("#text").html(window.stave.chord.tonic + "-" + window.stave.chord.mode + "<br>" + window.stave.chord.chord["notes"].join(" ") + "<br>" + window.stave.chord.chord["sounds"][0] + window.stave.chord.chord.octave[0] + " " + window.stave.chord.chord["sounds"][1] + window.stave.chord.chord.octave[1] + " " + window.stave.chord.chord["sounds"][2] + window.stave.chord.chord.octave[2]);
+	window.answerPanel = new AnswerPanel("answer-panel");
+
+	//$("#text").html(window.stave.chord.tonic + "-" + window.stave.chord.mode + "<br>" + window.stave.chord.chord["notes"].join(" ") + "<br>" + window.stave.chord.chord["sounds"][0] + window.stave.chord.chord.octave[0] + " " + window.stave.chord.chord["sounds"][1] + window.stave.chord.chord.octave[1] + " " + window.stave.chord.chord["sounds"][2] + window.stave.chord.chord.octave[2]);
 
 });
+
+function AnswerPanel(id) {
+	var self = this;
+	
+	init();
+	
+	function init() {
+		initVarsAndElems();
+		makeHtml();
+		handleEvents();
+		self.$elem.find("a:eq(0)").click();
+	}
+	
+	function initVarsAndElems() {
+		self.$elem = $("#" + id);
+		self.$elem.data("AnswerPanel", self);
+		self.marks = 0;
+		self.errors = 0;
+		self.time = {
+			"showTime": 0,
+			"clickTime": 0,
+			"intervals": []
+		};
+		self.testNum = 10;
+		self.chordArray = [];
+
+		if(window.stave && window.stave.chordArray) {
+			self.chordArray = window.stave.chordArray;
+		}
+	}
+
+	function makeHtml() {
+		createButtons();
+
+		function createButtons() {
+			for(var i = 0; i < self.chordArray.length; i++) {
+				var tonic = self.chordArray[i].toUpperCase();
+				self.$elem.append('<a href="#" class="i-dur" data-tonic="' + tonic + '" data-mode="dur">' + self.chordArray[i] + '-dur</a>');
+				self.$elem.append('<a href="#" class="i-moll" data-tonic="' + tonic + '" data-mode="moll">' + self.chordArray[i] + '-moll</a>');
+			}
+		}
+	}
+	
+	function handleEvents() {
+		self.$elem.find("a").click(clickButton);
+
+		function clickButton() {
+			window.stave._clear();
+
+			self.testNum--;
+			if(self.testNum == 0) {
+				showResult();
+			} else {
+				showNewChord();
+			}
+
+			self.time.clickTime = new Date().getTime();
+
+			if(!window.stave || !window.stave.chord) return false;
+			var currentChord = window.stave.chord;
+			var $button = $(this);
+			var chord = {
+				"tonic": $button.attr("data-tonic"),
+				"mode": $button.attr("data-mode")
+			};
+
+			if(chord.tonic == currentChord.tonic && chord.mode == currentChord.mode) {
+				trueAnswer();
+			} else {
+				falseAnswer();
+			}
+
+			rememberInterval();
+
+			return false;
+		}
+
+		function trueAnswer() {
+			increaseMarks();
+		}
+
+		function falseAnswer() {
+			increaseErrors();
+		}
+
+		function increaseMarks() {
+			self.marks++;
+		}
+
+		function increaseErrors() {
+			self.errors++;
+		}
+
+		function rememberInterval() {
+			var interval = self.time.clickTime - self.time.showTime;
+			self.time.intervals.push(interval);
+		}
+
+		function showResult() {
+			var result = "";
+			result += "Верных ответов: " + self.marks + "<br>";
+			result += "Ошибок: " + self.errors + "<br>";
+
+			var averageInterval = 0;
+			for(var i = 0; i < self.time.intervals.length; i++) {
+				averageInterval += self.time.intervals[i];
+			}
+			averageInterval /= self.time.intervals.length;
+
+			result += "Среднее время ответа: " + averageInterval + " мс";
+
+			$("body").empty().append('<div>' + result + '</div>')
+		}
+
+		function showNewChord() {
+			self.time.showTime = new Date().getTime();
+			window.stave._drawStave();
+			window.stave._showChord();
+		}
+	}
+}
 
 function Stave(id) {
 	if(!document.getElementById(id)) return;
@@ -13,8 +135,8 @@ function Stave(id) {
 	init();
 	
 	function init() {
-		initOptions();
 		self.elem = document.getElementById(id);
+		initOptions();
 		self.context  = self.elem.getContext('2d')
 		self.chordArray = ["C", "F", "G", "D"];
 
@@ -23,6 +145,8 @@ function Stave(id) {
 
 	function initOptions() {
 		self.options = {};
+		self.options.canvasWidth = self.elem.getAttribute("width");
+		self.options.canvasHeight = self.elem.getAttribute("height");
 		self.options.staveStart = 50;
 		self.options.staveStep = 20;
 		self.options.staveLineWidth = 2;
@@ -51,7 +175,7 @@ function Stave(id) {
 			self.context.lineWidth = self.options.staveLineWidth;
 			self.context.beginPath();
 			self.context.moveTo(x, y);
-			self.context.lineTo(200, y);
+			self.context.lineTo(self.options.canvasWidth, y);
 			self.context.stroke();
 
 			y += self.options.staveStep;
@@ -84,27 +208,128 @@ function Stave(id) {
 
 	function drawNote(note) {
 		var additionalStaveLines = (note.octave - self.options.startOctave) * (self.options.scale.octave1StaveLines.length * 0.5);
+		var noteStaveLine = note.staveLine + additionalStaveLines;
+		var x = 100;
 		var y = self.options.staveStart + ((self.options.staveLinesNum - 1) - (note.staveLine + additionalStaveLines)) * self.options.staveStep;
 
-		var topCurve = {};
-		topCurve.start = {x: 100, y: y};
-		topCurve.cPoint1 = {x: topCurve.start.x, y: topCurve.start.y - self.options.note.height/2};
-		topCurve.cPoint2 = {x: topCurve.start.x + self.options.note.width, y: topCurve.start.y - self.options.note.height/2};
-		topCurve.end = {x: topCurve.start.x + self.options.note.width, y: topCurve.start.y};
-
-		var bottomCurve = {};
-		bottomCurve.start = {x: topCurve.end.x, y: topCurve.end.y};
-		bottomCurve.cPoint1 = {x: bottomCurve.start.x, y: bottomCurve.start.y + self.options.note.height/2};
-		bottomCurve.cPoint2 = {x: bottomCurve.start.x - self.options.note.width, y: bottomCurve.start.y + self.options.note.height/2};
-		bottomCurve.end = {x: topCurve.start.x, y: topCurve.start.y};
+		var topCurve = getTopCurve();
+		var bottomCurve = getBottomCurve();
 
 		self.context.strokeStyle = self.options.note.strokeStyle;
-		self.context.lineWidth = self.options.note.lineWidth;
-		self.context.beginPath();
-		self.context.moveTo(topCurve.start.x, topCurve.start.y);
-		self.context.bezierCurveTo(topCurve.cPoint1.x, topCurve.cPoint1.y, topCurve.cPoint2.x, topCurve.cPoint2.y, topCurve.end.x, topCurve.end.y);
-		self.context.bezierCurveTo(bottomCurve.cPoint1.x, bottomCurve.cPoint1.y, bottomCurve.cPoint2.x, bottomCurve.cPoint2.y, bottomCurve.end.x, bottomCurve.end.y);
-		self.context.fill();
+		
+		drawNoteBody();
+		drawNoteAdditionalLine();
+		drawAlteration(note.alteration);
+		
+		function getTopCurve() {
+			var result = {};
+			result.start = {x: x, y: y};
+			result.cPoint1 = {x: result.start.x, y: result.start.y - self.options.note.height/2};
+			result.cPoint2 = {x: result.start.x + self.options.note.width, y: result.start.y - self.options.note.height/2};
+			result.end = {x: result.start.x + self.options.note.width, y: result.start.y};
+			
+			return result;
+		}
+		
+		function getBottomCurve() {
+			var result = {};
+			result.start = {x: topCurve.end.x, y: topCurve.end.y};
+			result.cPoint1 = {x: result.start.x, y: result.start.y + self.options.note.height/2};
+			result.cPoint2 = {x: result.start.x - self.options.note.width, y: result.start.y + self.options.note.height/2};
+			result.end = {x: topCurve.start.x, y: topCurve.start.y};
+			
+			return result;
+		}
+		
+		function drawNoteBody() {
+			self.context.lineWidth = self.options.note.lineWidth;
+			
+			self.context.beginPath();
+			self.context.moveTo(topCurve.start.x, topCurve.start.y);
+			self.context.bezierCurveTo(topCurve.cPoint1.x, topCurve.cPoint1.y, topCurve.cPoint2.x, topCurve.cPoint2.y, topCurve.end.x, topCurve.end.y);
+			self.context.bezierCurveTo(bottomCurve.cPoint1.x, bottomCurve.cPoint1.y, bottomCurve.cPoint2.x, bottomCurve.cPoint2.y, bottomCurve.end.x, bottomCurve.end.y);
+			self.context.fill();
+		}
+		
+		function drawNoteAdditionalLine() {
+			self.context.lineWidth = self.options.note.lineWidth;
+			
+			var line = Math.floor(Math.abs(noteStaveLine));
+			var sign = noteStaveLine / Math.abs(noteStaveLine);
+			
+			if(0 <= sign * line && sign * line <= (self.options.staveLinesNum - 1)) return;
+			
+			while(sign * line < 0 || sign * line > (self.options.staveLinesNum - 1)) {
+				drawLine(line);
+				line--;
+			}
+			
+			function drawLine(line) {
+				var y = self.options.staveStart + self.options.staveStep * (self.options.staveLinesNum - 1 - sign * line);
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 5, y);
+				self.context.lineTo(x + self.options.note.width + 5, y);
+				self.context.stroke();
+			}
+		}
+		
+		function drawAlteration(alteration) {
+			if(alteration == 0) return;
+			
+			switch(alteration) {
+				case 1:
+					drawSharp();
+					break;
+				case -1:
+					drawFlat();
+					break;
+			}
+			
+			function drawSharp() {
+				self.context.lineWidth = 1.5 * self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 5, y - 5);
+				self.context.lineTo(x - 20, y - 2);
+				self.context.stroke();
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 5, y + 2);
+				self.context.lineTo(x - 20, y + 5);
+				self.context.stroke();
+				
+				self.context.lineWidth = self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 10, y - 15);
+				self.context.lineTo(x - 10, y + 15);
+				self.context.stroke();
+				
+				self.context.beginPath();
+				self.context.moveTo(x - 15, y - 15);
+				self.context.lineTo(x - 15, y + 15);
+				self.context.stroke();
+			}
+			
+			function drawFlat() {
+				var startX = x - 15;
+				
+				self.context.lineWidth = self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(startX, y + self.options.note.height/2 - self.context.lineWidth);
+				self.context.lineTo(startX, y - self.options.note.height - 7);
+				self.context.stroke();
+				
+				self.context.lineWidth = 1.5 * self.options.note.lineWidth;
+				
+				self.context.beginPath();
+				self.context.moveTo(startX, y + self.options.note.height/2 - self.context.lineWidth);
+				self.context.bezierCurveTo(startX + 15, y, startX + 15, y - self.options.note.height/2 - 5, startX, y - self.options.note.height/2 + 2 * self.context.lineWidth);
+				self.context.stroke();
+			}
+		}
 	}
 
 	function showChord() {
@@ -112,10 +337,22 @@ function Stave(id) {
 		drawChord(self.chord);
 	}
 
+	function clear() {
+		self.context.clearRect(0, 0, self.options.canvasWidth, self.options.canvasHeight);
+	}
+
 	/*-- public methods ---*/
+
+	this._drawStave = function() {
+		drawStave();
+	};
 
 	this._showChord = function() {
 		showChord();
+	};
+
+	this._clear = function() {
+		clear();
 	};
 	
 }
