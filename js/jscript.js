@@ -42,8 +42,8 @@ function AnswerPanel(id) {
 		function createButtons() {
 			for(var i = 0; i < self.chordArray.length; i++) {
 				var tonic = self.chordArray[i].toUpperCase();
-				self.$elem.append('<a href="#" class="i-dur" data-tonic="' + tonic + '" data-mode="dur">' + self.chordArray[i] + '-dur</a>');
-				self.$elem.append('<a href="#" class="i-moll" data-tonic="' + tonic + '" data-mode="moll">' + self.chordArray[i] + '-moll</a>');
+				self.$elem.append('<a href="#" class="i-dur ' + tonic + '" data-tonic="' + tonic + '" data-mode="dur">' + self.chordArray[i] + '</a>');
+				self.$elem.append('<a href="#" class="i-moll ' + tonic + '" data-tonic="' + tonic + '" data-mode="moll">' + self.chordArray[i] + '</a>');
 			}
 		}
 	}
