@@ -214,7 +214,7 @@ function Stave(id) {
 	function drawNote(note) {
 		var additionalStaveLines = (note.octave - self.options.startOctave) * (self.options.scale.octave1StaveLines.length * 0.5);
 		var noteStaveLine = note.staveLine + additionalStaveLines;
-		var x = 100;
+		var x = (self.options.canvasWidth - self.options.note.width) / 2;
 		var y = self.options.staveStart + ((self.options.staveLinesNum - 1) - (note.staveLine + additionalStaveLines)) * self.options.staveStep;
 
 		var topCurve = getTopCurve();
