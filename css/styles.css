@@ -69,3 +69,11 @@
 	left: 390px;
 }
 /*_answer panel_*/
+
+/*popup*/
+.ui-popup {
+	width: 300px;
+	font-size: 9pt;
+	line-height: 1.5;
+}
+/*_popup_*/

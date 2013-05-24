@@ -17,14 +17,27 @@
 <body>
 
 <div data-role="page">
-	<div data-role="header"><h1>Chords</h1></div>
+	<div data-role="panel" data-position="right" data-display="overlay" data-position-fixed="true" id="options-panel">
+		<div class="b-options-panel__item" id="no-transformations-option">
+			<a href="#" data-role="button" data-inline="true" data-mini="true" class="b-options-panel__button">Без обращений</a>
+			<a href="#no-transformations-option-info" data-role="button" data-icon="info" data-iconpos="notext" data-inline="true" data-rel="popup" data-transition="pop" title="Info"></a>
+			<div data-role="popup" id="no-transformations-option-info">
+				<p>Будут показаны только основные аккорды, без их обращений. Например, для G-dur будут показываться только трезвучия (соль-си-ре) в разных октавах.</p>
+			</div>
+		</div>
+	</div>
+
+	<div data-role="header" data-position="fixed">
+		<h1>Chords</h1>
+		<a href="#options-panel" data-role="button" data-icon="gear" class="ui-btn-right">Options</a>
+	</div>
 	<div data-role="content">
 		<div class="b-content">
 			<canvas id="Stave" width="400" height="200"></canvas>
 			<div id="answer-panel"></div>
 		</div>
 	</div>
-	<div data-role="footer">
+	<div data-role="footer" data-position="fixed">
 		<div data-role="navbar">
 			<ul>
 				<li><a href="#">Restart</a></li>

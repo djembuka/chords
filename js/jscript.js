@@ -2,9 +2,22 @@ $(function() {
 	window.stave = new Stave("Stave");
 	window.answerPanel = new AnswerPanel("answer-panel");
 
+	optionsPanel();
+
 	//$("#text").html(window.stave.chord.tonic + "-" + window.stave.chord.mode + "<br>" + window.stave.chord.chord["notes"].join(" ") + "<br>" + window.stave.chord.chord["sounds"][0] + window.stave.chord.chord.octave[0] + " " + window.stave.chord.chord["sounds"][1] + window.stave.chord.chord.octave[1] + " " + window.stave.chord.chord["sounds"][2] + window.stave.chord.chord.octave[2]);
 
 });
+
+function optionsPanel() {
+	$("#no-transformations-option .b-options-panel__button").click(function(e) {
+		window.stave._setOption("noTransformations", !window.stave.options.noTransformations);
+		$("#answer-panel").data("AnswerPanel").time.showTime = 0;
+		$("#answer-panel a:eq(0)").click();
+		$(this).toggleClass("ui-btn-active");
+
+		e.preventDefault();
+	});
+}
 
 function AnswerPanel(id) {
 	var self = this;
@@ -346,6 +359,10 @@ function Stave(id) {
 		self.context.clearRect(0, 0, self.options.canvasWidth, self.options.canvasHeight);
 	}
 
+	function setOption(name, value) {
+		self.options[name] = value;
+	}
+
 	/*-- public methods ---*/
 
 	this._drawStave = function() {
@@ -358,6 +375,10 @@ function Stave(id) {
 
 	this._clear = function() {
 		clear();
+	};
+
+	this._setOption = function(name, value) {
+		setOption(name, value);
 	};
 	
 }
@@ -473,7 +494,8 @@ function Chord(chordArray) {
 	}
 
 	function getChord() {
-		var random = Math.round(Math.random() * 2);
+		var intervalsNum = self.options.triadAlgorithm.notes.dur.length;//num of intervals in the chord. Needed to "no transformations" option.
+		var random = window.stave.options.noTransformations ? (intervalsNum + 1) : Math.round(Math.random() * intervalsNum);
 		var result = formResult();
 
 		for(key in result) {
