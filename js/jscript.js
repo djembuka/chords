@@ -35,13 +35,16 @@ function AnswerPanel(id) {
 		self.$elem = $("#" + id);
 		self.$elem.data("AnswerPanel", self);
 		self.marks = 0;
-		self.errors = 0;
+		self.errors = {
+			num: 0,
+			chords: []
+		};
 		self.time = {
 			"showTime": 0,
 			"clickTime": 0,
 			"intervals": []
 		};
-		self.testNum = 10;
+		self.testNum = 1;
 		self.chordArray = [];
 
 		if(window.stave && window.stave.chordArray) {
@@ -92,7 +95,7 @@ function AnswerPanel(id) {
 
 			self.testNum--;
 			if(self.testNum == 0) {
-				showResult();
+				showStatistics();
 			} else {
 				showNewChord();
 			}
@@ -113,7 +116,8 @@ function AnswerPanel(id) {
 		}
 
 		function increaseErrors() {
-			self.errors++;
+			self.errors.num++;
+			self.errors.chords.push(window.stave.chord);
 		}
 
 		function rememberInterval() {
@@ -121,10 +125,13 @@ function AnswerPanel(id) {
 			self.time.intervals.push(interval);
 		}
 
-		function showResult() {
+		function showStatistics() {
 			var result = "";
 			result += "Верных ответов: " + self.marks + "<br>";
-			result += "Ошибок: " + self.errors + "<br>";
+			result += "Ошибок: " + self.errors.num + "<br>";
+			if(self.errors.chords.length > 0) {
+				result += "<a href='' class='b-show-errors'>Исправить</a><br>";
+			}
 
 			var averageInterval = 0;
 			for(var i = 0; i < self.time.intervals.length; i++) {
@@ -134,7 +141,16 @@ function AnswerPanel(id) {
 
 			result += "Среднее время ответа: " + averageInterval + " мс";
 
-			$("body").empty().append('<div>' + result + '</div>')
+			$("#Stave").closest(".b-content").addClass("i-statistics").append('<div class="b-statistics">' + result + '</div>');
+
+			$(".b-show-errors").click(clickShowErrors);
+
+			function clickShowErrors(e) {
+				window.stave._drawChord(self.errors.chords[0]);
+				$("#Stave").closest(".b-content").removeClass("i-statistics");
+				$(".b-statistics").remove();
+				e.preventDefault();
+			}
 		}
 
 		function showNewChord() {
@@ -371,6 +387,10 @@ function Stave(id) {
 
 	this._showChord = function() {
 		showChord();
+	};
+
+	this._drawChord = function(chord) {
+		drawChord(chord);
 	};
 
 	this._clear = function() {

@@ -4,6 +4,15 @@
 	margin: 0 auto;
 	text-align: center;
 }
+.i-statistics #Stave,
+.i-statistics #answer-panel {
+	display: none;
+}
+
+.b-statistics {
+	text-align: left;
+	font-size: 9pt;
+}
 /*_stave_*/
 
 /*answer panel*/
