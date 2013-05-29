@@ -46,6 +46,7 @@ function AnswerPanel(id) {
 		};
 		self.testNum = 1;
 		self.chordArray = [];
+		self.chordsToShow = [];
 
 		if(window.stave && window.stave.chordArray) {
 			self.chordArray = window.stave.chordArray;
@@ -146,7 +147,10 @@ function AnswerPanel(id) {
 			$(".b-show-errors").click(clickShowErrors);
 
 			function clickShowErrors(e) {
-				window.stave._drawChord(self.errors.chords[0]);
+				window.stave._drawStave();
+				self.chordsToShow = self.errors.chords;
+				self.$elem.find("a:eq(0)").click();
+				//window.stave._drawChord(self.errors.chords[0]);
 				$("#Stave").closest(".b-content").removeClass("i-statistics");
 				$(".b-statistics").remove();
 				e.preventDefault();
@@ -156,8 +160,15 @@ function AnswerPanel(id) {
 		function showNewChord() {
 			self.time.showTime = new Date().getTime();
 			window.stave._drawStave();
-			window.stave._showChord();
+
+			if(self.chordsToShow.length != 0) {
+				window.stave._drawChord(self.chordsToShow[0]);
+				self.chordsToShow.shift();
+			} else {
+				window.stave._showChord();
+			}
 		}
+
 	}
 }
 
