@@ -1,12 +1,38 @@
 $(function() {
 	window.stave = new Stave("Stave");
 	window.answerPanel = new AnswerPanel("answer-panel");
+	window.staveController = new Controller();
 
 	optionsPanel();
 
 	//$("#text").html(window.stave.chord.tonic + "-" + window.stave.chord.mode + "<br>" + window.stave.chord.chord["notes"].join(" ") + "<br>" + window.stave.chord.chord["sounds"][0] + window.stave.chord.chord.octave[0] + " " + window.stave.chord.chord["sounds"][1] + window.stave.chord.chord.octave[1] + " " + window.stave.chord.chord["sounds"][2] + window.stave.chord.chord.octave[2]);
 
 });
+
+function Controller() {
+	var self = this;
+	
+	init();
+	
+	function init() {
+		initVarsAndElems();
+	}
+	
+	function initVarsAndElems() {
+	}
+	
+	/*--- public methods ---*/
+
+	this._startShowChords = function() {
+		window.answerPanel.time.clickTime = new Date().getTime();
+		window.stave._clear();
+		showNewChord();
+	};
+
+	this._stopShowChords = function() {};
+
+	this._pauseShowChords = function() {};
+}
 
 function optionsPanel() {
 	$("#no-transformations-option .b-options-panel__button").click(function(e) {
@@ -44,7 +70,7 @@ function AnswerPanel(id) {
 			"clickTime": 0,
 			"intervals": []
 		};
-		self.testNum = 1;
+		self.testNum = 10;
 		self.chordArray = [];
 		self.chordsToShow = [];
 
