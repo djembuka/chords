@@ -20,6 +20,18 @@ function Controller() {
 	
 	function initVarsAndElems() {
 	}
+
+	function showNewChord() {
+		self.time.showTime = new Date().getTime();
+		window.stave._drawStave();
+
+		if(self.chordsToShow.length != 0) {
+			window.stave._drawChord(self.chordsToShow[0]);
+			self.chordsToShow.shift();
+		} else {
+			window.stave._showChord();
+		}
+	}
 	
 	/*--- public methods ---*/
 
@@ -83,16 +95,29 @@ function AnswerPanel(id) {
 		createButtons();
 
 		function createButtons() {
-			for(var i = 0; i < self.chordArray.length; i++) {
-				var tonic = self.chordArray[i].toUpperCase();
-				self.$elem.append('<a href="#" class="i-dur ' + tonic + '" data-tonic="' + tonic + '" data-mode="dur">' + self.chordArray[i] + '</a>');
-				self.$elem.append('<a href="#" class="i-moll ' + tonic + '" data-tonic="' + tonic + '" data-mode="moll">' + self.chordArray[i] + '</a>');
+			var array = window.stave.options.scale.sounds;
+			var tonic;
+
+			for(var i = 0; i < array.length; i++) {
+				tonic = array[i][0];
+
+				for(var j = 0; j < array[i].length; j++) {
+					if(array[i][j].length == 1) tonic = array[i][j];
+				}
+
+				self.$elem.append('<div class="i-' + tonic + '"></div>');
 			}
+
+			for(var i = 0; i < self.chordArray.length; i++) {
+				tonic = self.chordArray[i].toLowerCase();
+				self.$elem.append('<div class="i-key i-' + tonic + '" data-tonic="' + tonic + '"></div>');
+			}
+			
 		}
 	}
 	
 	function handleEvents() {
-		self.$elem.find("a").click(clickButton);
+		self.$elem.find("i-key").click(clickButton);
 
 		function clickButton() {
 			self.time.clickTime = new Date().getTime();
