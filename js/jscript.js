@@ -117,9 +117,21 @@ function AnswerPanel(id) {
 	}
 	
 	function handleEvents() {
-		self.$elem.delegate(".i-key", "click", clickButton);
+		self.$elem
+			.delegate(".i-key", "click", clickKey)
+			.delegate(".i-key", "dblclick", dblclickKey);
 
-		function clickButton() {
+		function clickKey() {
+			checkAnswer("moll");
+			return false;
+		}
+
+		function dblclickKey() {
+			checkAnswer("dur");
+			return false;
+		}
+
+		function checkAnswer(mode) {
 			self.time.clickTime = new Date().getTime();
 			window.stave._clear();
 
@@ -134,7 +146,7 @@ function AnswerPanel(id) {
 			var $button = $(this);
 			var chord = {
 				"tonic": $button.attr("data-tonic"),
-				"mode": $button.attr("data-mode")
+				"mode": mode
 			};
 
 			if(chord.tonic == currentChord.tonic && chord.mode == currentChord.mode) {
@@ -151,8 +163,6 @@ function AnswerPanel(id) {
 			} else {
 				showNewChord();
 			}
-
-			return false;
 		}
 
 		function trueAnswer() {
