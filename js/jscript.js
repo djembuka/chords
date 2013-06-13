@@ -117,7 +117,7 @@ function AnswerPanel(id) {
 	}
 	
 	function handleEvents() {
-		self.$elem.find("i-key").click(clickButton);
+		self.$elem.delegate(".i-key", "click", clickButton);
 
 		function clickButton() {
 			self.time.clickTime = new Date().getTime();
